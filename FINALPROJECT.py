@@ -7,7 +7,13 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
- 
+
+
+done = False
+gameover = False
+
+score = 0
+level = 1
 # --- Classes
 
 class Block(pygame.sprite.Sprite):
@@ -37,11 +43,44 @@ class Block(pygame.sprite.Sprite):
         # Move block down one pixel
         self.rect.y += 1
         if level == 2:
+            self.rect.y +=2
+ 
+        # If block is too far down, reset to top of screen.
+        if self.rect.y > 750:
+            self.reset_pos()
+class Alien(pygame.sprite.Sprite):
+    """ This class represents the block. """
+    def __init__(self, color):
+        # Call the parent class (Sprite) constructor
+        super().__init__()
+ 
+        self.image = pygame.Surface([20, 15])
+        self.image.fill(color)
+        self.image = pygame.image.load("alien2.png").convert()
+        self.image.set_colorkey(BLACK)
+        
+        
+        self.rect = self.image.get_rect()
+ 
+    def reset_pos(self):
+        """ Reset position to the top of the screen, at a random x location.
+        Called by update() or the main program loop if there is a collision.
+        """
+        self.rect.y = random.randrange(-300, -20)
+        self.rect.x = random.randrange(0, screen_width)
+ 
+    def update(self):
+        """ Called each frame. """
+ 
+        # Move block down one pixel
+        self.rect.y += 2
+        if level == 2:
             self.rect.y +=3
  
         # If block is too far down, reset to top of screen.
         if self.rect.y > 750:
             self.reset_pos()
+            
             
 class Player(pygame.sprite.Sprite):
     """ This class represents the Player. """
@@ -70,9 +109,6 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = pos[0]
         
         
-        
- 
- 
 class Bullet(pygame.sprite.Sprite):
     """ This class represents the bullet . """
     def __init__(self):
@@ -88,8 +124,7 @@ class Bullet(pygame.sprite.Sprite):
         """ Move the bullet. """
         self.rect.y -= 5
  
-def pause():
-     test = input("Press Enter to continue...")
+
 # --- Create the window
 
 # Initialize Pygame
@@ -129,19 +164,29 @@ for i in range(25):
     # Add the block to the list of objects
     block_list.add(block)
     all_sprites_list.add(block)
- 
+if level == 1:
+    for i in range(25):
+        # This represents a block
+        block = Alien(BLUE)
+     
+        # Set a random location for the block
+        block.rect.x = random.randrange(650)
+        block.rect.y = random.randrange(-300, -20)
+     
+        # Add the block to the list of objects
+        block_list.add(block)
+        all_sprites_list.add(block)
+    
+     
 # Create a red player block
 player = Player()
 all_sprites_list.add(player)
  
 # Loop until the user clicks the close button.
-done = False
-gameover = False
-# Used to manage how fast the screen updates
+
+
 clock = pygame.time.Clock()
- 
-score = 0
-level = 1
+
 player.rect.y = 600
 
 
@@ -228,7 +273,33 @@ while not done:
             # Add the bullet to the lists
             all_sprites_list.add(bullet)
             bullet_list.add(bullet)
- 
+    
+    try:
+        file = open('highscores.txt', 'r')
+        lines = file.readlines()
+        prevhighscore = int(lines[0])
+        prevname = lines[1]
+        prevname = prevname.replace('\n','')
+    
+        file.close()                    
+    except IOError:
+        file = open('highscores.txt', 'w')
+        writescore = str(score) + "\n"
+        file.write(writescore)
+        writename = name + "\n"
+        file.write(writename)
+        file.close()
+        
+
+    if score > prevhighscore:
+        file = open('highscores.txt', 'w')
+        writescore = str(score) + "\n"
+        file.write(writescore)
+        writename = name + "\n"
+        file.write(writename)
+        file.close()    
+        
+        
     # --- Game logic
  
 
@@ -239,6 +310,7 @@ while not done:
  
     # Calculate mechanics for each bullet
     for bullet in bullet_list:
+       
  
         # See if it hit a block
         block_hit_list = pygame.sprite.spritecollide(bullet, block_list, True)
@@ -249,7 +321,7 @@ while not done:
             all_sprites_list.remove(bullet)
             score += 1
             print(score)
-            if score == 1:
+            if score == 15:
                 level += 1
                 
                 for block in block_list:
@@ -263,10 +335,6 @@ while not done:
             bullet_list.remove(bullet)
             all_sprites_list.remove(bullet)
     
-
-
-        
-
     # --- Draw a frame
     screen.blit(background_image, [0, 0])
     leveltext = "LEVEL: " + str(level)
@@ -275,6 +343,10 @@ while not done:
     scoretext = "SCORE: " + str(score)
     text = font.render(scoretext, True, WHITE)
     screen.blit(text, [0, 680])
+    highscoretext = "HIGH-SCORE: " + str(prevhighscore)
+    text = font.render(highscoretext, True, WHITE)
+    screen.blit(text, [0, 560])
+    highscorenametext = "HIGH-SCORE BY: " + str(prevname)
     
     if pygame.sprite.spritecollide(player, block_list, True):    
         gameover = True
@@ -284,15 +356,24 @@ while not done:
         screen.fill(BLACK)
         text = font.render("GAME OVER", True, WHITE)
         screen.blit(text, [260, 300])
-        text = font.render("Press enter to quit", True, WHITE)
-        screen.blit(text, [230, 350])    
-        all_sprites_list.remove(block)
-        block_list.remove(block)
-        time.sleep(.1)
+        text = font.render("PRESS ENTER TO QUIT", True, WHITE)
+        screen.blit(text, [200, 350])    
+        text = font.render(scoretext, True, WHITE)
+        screen.blit(text, [280, 400])
+        text = font.render(highscoretext, True, WHITE)
+        screen.blit(text, [245, 450])
+        text = font.render(highscorenametext, True, WHITE)
+        screen.blit(text, [205, 480])        
+        for sprites in all_sprites_list:
+            all_sprites_list.remove(sprites)
+
+        
           
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
-                pygame.quit()        
+                pygame.quit()    
+                
+
     # Clear the screen
 
  
