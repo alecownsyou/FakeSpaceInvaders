@@ -11,7 +11,7 @@ BLUE = (0, 0, 255)
 
 done = False
 gameover = False
-
+#sets level to one and score to 0 for start of game
 score = 0
 level = 1
 # --- Classes
@@ -186,12 +186,12 @@ all_sprites_list.add(player)
 
 
 clock = pygame.time.Clock()
-
+#sets players y value
 player.rect.y = 600
 
 
 font = pygame.font.Font(None, 36)
- 
+ #basic code for things such as music, sound effects and names
 display_instructions = True
 instruction_page = 1
 name = ""
@@ -273,7 +273,7 @@ while not done:
             # Add the bullet to the lists
             all_sprites_list.add(bullet)
             bullet_list.add(bullet)
-    
+    #code for highscore file and showing highscore
     try:
         file = open('highscores.txt', 'r')
         lines = file.readlines()
@@ -335,7 +335,7 @@ while not done:
             bullet_list.remove(bullet)
             all_sprites_list.remove(bullet)
     
-    # --- Draw a frame
+    # Text for score and level aswell as endscreen
     screen.blit(background_image, [0, 0])
     leveltext = "LEVEL: " + str(level)
     text = font.render(leveltext, True, WHITE)
@@ -347,11 +347,11 @@ while not done:
     text = font.render(highscoretext, True, WHITE)
     screen.blit(text, [0, 560])
     highscorenametext = "HIGH-SCORE BY: " + str(prevname)
-    
+    #if collision then use endscreen
     if pygame.sprite.spritecollide(player, block_list, True):    
         gameover = True
 
-
+        #endscreen code
     if gameover == True:
         screen.fill(BLACK)
         text = font.render("GAME OVER", True, WHITE)
@@ -368,7 +368,7 @@ while not done:
             all_sprites_list.remove(sprites)
 
         
-          
+          #if enter is hit during end screen then quit game
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 pygame.quit()    
